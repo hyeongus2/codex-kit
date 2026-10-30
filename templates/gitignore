@@ -7,7 +7,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
-*.log
 .cache/
 .npm/
 .DS_Store
