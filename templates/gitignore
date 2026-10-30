@@ -1,0 +1,13 @@
+# codex-kit: 커밋하지 않을 파일
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.log
+.cache/
+.npm/
+.DS_Store
