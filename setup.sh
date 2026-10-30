@@ -41,8 +41,8 @@ else
   say "기존 AGENTS.md 뒤에 키트 규칙을 덧붙임 (기존 내용이 우선)"
 fi
 
-echo "[2/4] PLAN.md, DECISIONS.md"
-for f in PLAN.md DECISIONS.md; do
+echo "[2/4] PLAN.md, INTERVIEW.md, DECISIONS.md"
+for f in PLAN.md INTERVIEW.md DECISIONS.md; do
   if [ -e "$WORK/$f" ]; then
     say "건너뜀: $f (이미 있음)"
   else
