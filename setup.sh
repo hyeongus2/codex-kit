@@ -43,13 +43,22 @@ fi
 
 echo "[2/4] PLAN.md, INTERVIEW.md, DECISIONS.md"
 for f in PLAN.md INTERVIEW.md DECISIONS.md; do
-  if [ -e "$WORK/$f" ]; then
-    say "건너뜀: $f (이미 있음)"
-  else
+  if [ ! -e "$WORK/$f" ]; then
     cp "$KIT/templates/$f" "$WORK/$f" || fail "$f를 만들지 못함"
     say "복사함: $f"
+  elif cmp -s "$KIT/templates/$f" "$WORK/$f"; then
+    say "건너뜀: $f (키트 양식이 이미 있음)"
+  else
+    warn "$f가 이미 있어 덮어쓰지 않았습니다. 과제가 준 파일이면 Codex가 AGENTS.md '과제가 준 파일과 겹칠 때' 규칙대로 이 파일 형식을 우선합니다."
   fi
 done
+# 이름은 달라도 계획·결정·메모 역할일 수 있는 문서 (숨김 폴더 제외, 두 단계 깊이까지)
+similar="$(cd "$WORK" && find . -maxdepth 2 -type f \( -iname '*.md' -o -iname '*.txt' \) \
+  \( -iname '*plan*' -o -iname '*todo*' -o -iname '*note*' -o -iname '*decision*' -o -iname 'adr*' -o -iname '*worklog*' \) \
+  -not -path './.*' -not -path './node_modules/*' 2>/dev/null | sed 's|^\./||' | grep -vxE 'PLAN\.md|INTERVIEW\.md|DECISIONS\.md' | sort | tr '\n' ' ')"
+if [ -n "$similar" ]; then
+  warn "계획·결정·메모 역할일 수 있는 파일이 있습니다: ${similar}Codex가 시작할 때 확인하고 PLAN.md '기록 위치'를 정합니다."
+fi
 
 echo "[3/4] .gitignore"
 if [ ! -e "$WORK/.gitignore" ]; then
@@ -95,6 +104,27 @@ else
     fi
   done
 fi
+# Codex는 작업 폴더부터 저장소 맨 위까지의 .agents/skills도 읽는다. 같은 이름이 두 곳에 있으면 $이름 호출이 무시된다.
+home_skills="$(cd "$SKILLS_DIR" 2>/dev/null && pwd -P)"
+top="$(git -C "$WORK" rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+d="$(pwd -P)"
+while :; do
+  if [ -d "$d/.agents/skills" ]; then
+    rd="$(cd "$d/.agents/skills" && pwd -P)"
+    if [ "$rd" != "$home_skills" ]; then
+      for src in "$KIT"/skills/*/; do
+        name="$(basename "$src")"
+        if [ -f "$rd/$name/SKILL.md" ]; then
+          warn "$name: $rd 에도 같은 이름 스킬이 있어 '\$$name'으로 부르면 무시됩니다. 대신 Codex에게 '$KIT/skills/$name/SKILL.md 읽고 그 절차대로 해'라고 하세요."
+        fi
+      done
+    fi
+  fi
+  [ "$d" = "$top" ] && break
+  parent="$(dirname "$d")"
+  [ "$parent" = "$d" ] && break
+  d="$parent"
+done
 
 echo
 if [ "$warnings" -gt 0 ]; then
