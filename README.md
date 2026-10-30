@@ -4,7 +4,7 @@ Codex CLI로 몇 시간짜리 업무 과제를 풀 때 쓰는 작업 규칙과 �
 
 ## 사용법
 
-작업 폴더에서 사람이 직접 실행한다.
+과제 README.md가 있는 작업 폴더(예: `~/workspace`)에서 사람이 직접 실행한다. 먼저 `ls`로 README.md가 보이는지 확인한다.
 
 ```bash
 git clone https://github.com/hyeongus2/codex-kit /tmp/kit
@@ -16,9 +16,15 @@ bash /tmp/kit/setup.sh
 1. `/skills`에 스킬 4개가 보이는지
 2. "커밋하면 안 되는 파일과 이유, 단계를 시작하기 직전에 할 일, 검증할 때 확인할 네 가지를 말해"라고 물었을 때 규칙대로 답하는지 (설치된 것과 적용된 것은 다르다)
 
-설치 출력에 [주의]가 있으면 그 줄을 복사해 Codex 첫 메시지에 붙여 넣는다. Codex는 설치 출력을 보지 못한다.
+설치 출력에 [주의]가 있으면 그 줄을 복사해 Codex 첫 메시지에 붙여 넣는다. Codex는 설치 출력을 보지 못한다. 터미널에서는 텍스트를 선택한 뒤 `Ctrl+C`로 복사하고 `Ctrl+Shift+V`로 붙여 넣는다. 선택 없이 누른 `Ctrl+C`는 실행 중인 명령(Codex 포함)을 멈추므로 조심한다.
 
-Codex 샌드박스가 `.git`을 읽기 전용으로 막으면 `git add`·`git commit` 때 승인 창이 뜬다. 승인 창에서는 `Yes, proceed`(이번만)를 고른다. `don't ask again for commands that start with ...`는 `~/.codex/rules`에 규칙을 저장하므로 고르지 않는다.
+Codex 샌드박스가 `.git`을 읽기 전용으로 막으면 `git add`·`git commit` 때 승인 창이 뜬다. 공식 안내대로 확인 후 한 번 승인한다: `Yes, proceed`(이번만)를 고른다. `don't ask again for commands that start with ...`는 `~/.codex/rules`에 규칙을 저장하므로 고르지 않는다.
+
+스킬은 Codex 표준 위치(`~/.agents/skills`)에 복사한다. 응시 환경이 스킬 적용 방법을 따로 안내하면 그 방법을 따르고, 모르면 Cofa Helper에게 묻는다. 스킬을 쓸 수 없으면 Codex에게 "`/tmp/kit/skills/<이름>/SKILL.md` 읽고 그 절차대로 해"라고 한다.
+
+키트는 MCP를 쓰지 않는다. MCP는 응시 환경의 MCP 탭에서 과제에 필요할 때만 설정할 수 있다.
+
+에디터에 PLAN.md 같은 기록 파일을 열어 둔 채 Codex가 그 파일을 고치면 "외부 변경 감지"가 뜬다. 이때는 "외부 변경 불러오기"를 골라 Codex가 쓴 최신 내용을 가져온다.
 
 Codex에게 설치를 시켜도 되지만, 네트워크 접근과 `~/.agents` 쓰기 때문에 승인 창이 뜬다. 사람이 직접 치는 쪽이 빠르고, 설치 작업이 과제 기록에 섞이지 않는다.
 
@@ -28,6 +34,7 @@ Codex에게 설치를 시켜도 되지만, 네트워크 접근과 `~/.agents` �
 
 | 순서 | 대상 | 동작 |
 |---|---|---|
+| 0 | 작업 폴더 | README가 없으면 작업 폴더를 잘못 골랐을 수 있다고 경고 |
 | 1 | `./AGENTS.md` | 없으면 복사. 있으면 기존 내용은 두고 맨 뒤에 키트 규칙을 한 번만 덧붙임. `AGENTS.override.md`가 있으면(빈 파일 포함) 키트 규칙이 적용되지 않는다고 경고. 32,768바이트를 넘어 Codex가 뒷부분을 잘라 읽게 되면 경고 |
 | 2 | `./PLAN.md`, `./INTERVIEW.md`, `./DECISIONS.md` | 없을 때만 복사. 키트 양식과 다른 파일이 이미 있으면 덮어쓰지 않고 경고. 이름은 달라도 계획·결정·메모 역할일 수 있는 문서(`TODO.md`, `TASKS.md`, `docs/plan.md` 등, 세 단계 깊이까지)가 있으면 목록을 알려 줌 |
 | 3 | `./.gitignore` | 없으면 복사. 있으면 빠진 줄만 맨 앞에 넣어 기존 규칙(예외 포함)이 우선하게 함. 과제 규칙이 PLAN.md·INTERVIEW.md·DECISIONS.md를 무시하면 경고 |

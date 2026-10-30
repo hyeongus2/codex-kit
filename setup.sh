@@ -27,6 +27,11 @@ ensure_newline() {
   fi
 }
 
+# 과제 README가 없는 폴더면 작업 폴더를 잘못 골랐을 수 있다 (예: 홈에서 실행했는데 과제는 ~/workspace)
+if ! ls -A "$WORK" 2>/dev/null | grep -qi '^readme'; then
+  warn "이 폴더에 README가 없습니다. 과제 README.md가 있는 작업 폴더에서 실행했는지 확인하세요: $WORK"
+fi
+
 echo "[1/4] AGENTS.md"
 # Codex는 override가 파일이기만 하면(빈 파일이어도) 같은 폴더의 AGENTS.md를 읽지 않는다
 if [ -e "$WORK/AGENTS.override.md" ]; then
@@ -151,7 +156,7 @@ check_skill_dir "${CODEX_HOME:-$HOME/.codex}/skills"
 
 echo
 if [ "$warnings" -gt 0 ]; then
-  echo "완료, [주의] ${warnings}건. 위 [주의] 줄을 복사해 Codex 첫 메시지에 붙여 넣으세요(Codex는 이 출력을 보지 못합니다). Codex를 다시 켜고(/quit -> codex) /skills 를 확인하세요."
+  echo "완료, [주의] ${warnings}건. 위 [주의] 줄을 선택해 Ctrl+C로 복사하고 Codex 첫 메시지에 Ctrl+Shift+V로 붙여 넣으세요(Codex는 이 출력을 보지 못합니다). Codex를 다시 켜고(/quit -> codex) /skills 를 확인하세요."
   exit 2
 fi
 echo "완료. Codex를 다시 켜고(/quit -> codex) /skills 에서 스킬 4개를 확인하세요."
