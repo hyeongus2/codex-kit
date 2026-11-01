@@ -52,8 +52,8 @@ if [ -f "$WORK/AGENTS.md" ] && [ "$(wc -c < "$WORK/AGENTS.md")" -gt 32768 ]; the
   warn "AGENTS.md가 32,768바이트를 넘어 Codex가 뒷부분(키트 규칙)을 잘라 읽습니다. Codex에게 '$KIT/AGENTS.md 읽고 따라'라고 말하세요."
 fi
 
-echo "[2/4] PLAN.md, INTERVIEW.md, DECISIONS.md"
-for f in PLAN.md INTERVIEW.md DECISIONS.md; do
+echo "[2/4] PLAN.md, INTERVIEW.md, DECISIONS.md, CONTRACT.md, work/_template.md"
+for f in PLAN.md INTERVIEW.md DECISIONS.md CONTRACT.md; do
   if [ ! -e "$WORK/$f" ]; then
     cp "$KIT/templates/$f" "$WORK/$f" || fail "$f를 만들지 못함"
     say "복사함: $f"
@@ -63,12 +63,26 @@ for f in PLAN.md INTERVIEW.md DECISIONS.md; do
     warn "$f가 이미 있어 덮어쓰지 않았습니다. 과제가 준 파일이면 Codex가 AGENTS.md '과제가 준 파일과 겹칠 때' 규칙대로 이 파일 형식을 우선합니다."
   fi
 done
+# 세션마다 work/<역할>.md를 이 양식으로 만든다
+if [ -e "$WORK/work" ] && [ ! -d "$WORK/work" ]; then
+  warn "work가 폴더가 아니라 파일이라 세션 기록 양식을 놓지 못했습니다. lead가 세션 기록 폴더를 따로 정해 PLAN.md '기록 위치'에 적으세요. 양식은 $KIT/templates/work.md 에 있습니다."
+elif [ ! -e "$WORK/work/_template.md" ]; then
+  if mkdir -p "$WORK/work" && cp "$KIT/templates/work.md" "$WORK/work/_template.md"; then
+    say "복사함: work/_template.md"
+  else
+    warn "work/_template.md를 만들지 못했습니다. 양식은 $KIT/templates/work.md 에 있습니다."
+  fi
+elif cmp -s "$KIT/templates/work.md" "$WORK/work/_template.md"; then
+  say "건너뜀: work/_template.md (키트 양식이 이미 있음)"
+else
+  warn "work/_template.md가 이미 있어 덮어쓰지 않았습니다. 키트 양식은 $KIT/templates/work.md 에 있습니다."
+fi
 # 이름은 달라도 계획·결정·메모 역할일 수 있는 문서 (숨김 폴더 제외, 세 단계 깊이까지)
 similar="$(cd "$WORK" && find . -maxdepth 3 -type f \( -iname '*.md' -o -iname '*.txt' \) \
   \( -iname '*plan*' -o -iname '*todo*' -o -iname '*note*' -o -iname '*decision*' -o -iname 'adr*' -o -iname '*worklog*' \
-     -o -iname '*task*' -o -iname '*require*' -o -iname '*handoff*' -o -iname '*계획*' -o -iname '*결정*' -o -iname '*메모*' \) \
-  -not -iname 'requirements*.txt' -not -path './.*' -not -path './node_modules/*' 2>/dev/null \
-  | sed 's|^\./||' | grep -vxE 'PLAN\.md|INTERVIEW\.md|DECISIONS\.md' | sort | tr '\n' ' ')"
+     -o -iname '*task*' -o -iname '*require*' -o -iname '*handoff*' -o -iname '*contract*' -o -iname '*계획*' -o -iname '*결정*' -o -iname '*메모*' \) \
+  -not -iname 'requirements*.txt' -not -path './.*' -not -path './node_modules/*' -not -path './work/*' 2>/dev/null \
+  | sed 's|^\./||' | grep -vxE 'PLAN\.md|INTERVIEW\.md|DECISIONS\.md|CONTRACT\.md' | sort | tr '\n' ' ')"
 if [ -n "$similar" ]; then
   warn "계획·결정·메모 역할일 수 있는 파일이 있습니다: ${similar}Codex가 시작할 때 확인하고 PLAN.md '기록 위치'를 정합니다."
 fi
@@ -96,7 +110,7 @@ else
 fi
 # 과제 .gitignore가 기록 파일까지 무시하면 커밋할 수 없다
 if git -C "$WORK" rev-parse --git-dir >/dev/null 2>&1; then
-  ignored="$(cd "$WORK" && git check-ignore PLAN.md INTERVIEW.md DECISIONS.md 2>/dev/null | tr '\n' ' ')"
+  ignored="$(cd "$WORK" && git check-ignore PLAN.md INTERVIEW.md DECISIONS.md CONTRACT.md work/lead.md 2>/dev/null | tr '\n' ' ')"
   if [ -n "$ignored" ]; then
     warn "과제 .gitignore가 기록 파일을 무시합니다: ${ignored}커밋할지는 README를 보고 사람이 정하세요(Codex는 git add -f를 쓰지 않습니다)."
   fi
@@ -159,4 +173,4 @@ if [ "$warnings" -gt 0 ]; then
   echo "완료, [주의] ${warnings}건. 위 [주의] 줄을 선택해 Ctrl+C로 복사하고 Codex 첫 메시지에 Ctrl+Shift+V로 붙여 넣으세요(Codex는 이 출력을 보지 못합니다). Codex를 다시 켜고(/quit -> codex) /skills 를 확인하세요."
   exit 2
 fi
-echo "완료. Codex를 다시 켜고(/quit -> codex) /skills 에서 스킬 4개를 확인하세요."
+echo "완료. Codex를 다시 켜고(/quit -> codex) /skills 에서 스킬 6개를 확인하세요."
