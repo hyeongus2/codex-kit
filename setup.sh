@@ -112,7 +112,7 @@ fi
 if git -C "$WORK" rev-parse --git-dir >/dev/null 2>&1; then
   ignored="$(cd "$WORK" && git check-ignore PLAN.md INTERVIEW.md DECISIONS.md CONTRACT.md work/lead.md 2>/dev/null | tr '\n' ' ')"
   if [ -n "$ignored" ]; then
-    warn "과제 .gitignore가 기록 파일을 무시합니다: ${ignored}커밋할지는 README를 보고 사람이 정하세요(Codex는 git add -f를 쓰지 않습니다)."
+    warn "과제 .gitignore가 기록 파일을 무시합니다: ${ignored}이 줄은 lead 첫 메시지에 붙이세요. lead가 한 번 묻습니다. README에 따로 정한 것이 없으면, 추천은 기록 파일만 추적되게 과제 .gitignore를 최소한으로 고쳐 커밋하는 것입니다(Codex는 git add -f를 쓰지 않습니다)."
   fi
 fi
 
