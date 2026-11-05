@@ -157,6 +157,7 @@
 - 커밋하기 전에 들어갈 내용을 확인한다: 고친 파일은 `git diff HEAD -- 파일1 파일2`, 새 파일은 파일 내용을 직접 본다.
 - `index.lock` 오류가 나면 다른 세션이 git을 쓰는 중이다. 잠금 파일을 지우지 않고, 잠시 뒤 같은 명령을 다시 실행한다.
 - 폴더 전체에 작용해 다른 세션의 커밋 안 된 작업을 지우거나 바꾸는 명령은 쓰지 않는다: `git stash`, 파일을 지정하지 않은 `git checkout`·`git restore`(`git checkout -- .`, `git restore .` 포함), `git reset --hard`, `git clean`, 브랜치 전환(`git switch`, `git checkout <브랜치>`), `git rebase`, `git merge`, 저장소 전체 포매터·자동 수정(예: `black .`, `prettier --write .`). 자기 파일만 되돌릴 때는 `git restore -- 내파일`처럼 파일을 지정한다.
+- `git commit --amend`는 쓰지 않는다. 맨 위 커밋이 다른 세션 것일 수 있다. 고칠 것은 새 커밋으로 한다.
 - AGENTS.md, .gitignore, `.agents/`, work/_template.md, 시작 git 상태의 환경 파일은 add하지 않는다. README가 요구하거나, 아래처럼 사람이 허락한 .gitignore 수정은 예외다.
 - 과제 .gitignore가 기록 파일을 무시하면 `git add -f`를 쓰지 않는다. lead가 사람에게 한 번 묻는다. 추천안은 과제 .gitignore를 최소한으로 고쳐 기록 파일만 추적되게 하고, 그 .gitignore를 커밋하는 것이다. 과제가 원래 무시하던 파일은 계속 무시되는지 `git check-ignore`로 확인하고, 키트가 맨 앞에 넣은 줄은 그 커밋에 넣지 않는다. 정한 것은 PLAN.md '기록 위치'에 적고, 다른 세션은 그대로 따른다.
 - 샌드박스에서 `.git`이 읽기 전용이라 `git add`·`git commit`이 막히면, 같은 명령을 승인 요청으로 다시 실행한다. 한 번 막힌 것을 봤으면 그 뒤 커밋은 처음부터 승인 요청으로 실행한다. 임시 저장소, bundle, 다른 폴더 복사로 우회하지 않는다.
