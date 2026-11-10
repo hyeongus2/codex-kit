@@ -173,4 +173,4 @@ if [ "$warnings" -gt 0 ]; then
   echo "완료, [주의] ${warnings}건. 위 [주의] 줄을 선택해 Ctrl+C로 복사하고 Codex 첫 메시지에 Ctrl+Shift+V로 붙여 넣으세요(Codex는 이 출력을 보지 못합니다). Codex를 다시 켜고(/quit -> codex) /skills 를 확인하세요."
   exit 2
 fi
-echo "완료. Codex를 다시 켜고(/quit -> codex) /skills 에서 스킬 6개를 확인하세요."
+echo "완료. Codex를 다시 켜고(/quit -> codex) /skills 에서 스킬 $(ls -d "$KIT"/skills/*/ | wc -l | tr -d ' ')개를 확인하세요."
