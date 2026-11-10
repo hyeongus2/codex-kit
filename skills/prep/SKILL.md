@@ -126,7 +126,7 @@ prep 세션이 쓴다. prep이 없으면 ask가 같은 절차로 한다. 사람�
 - 다 채운 뒤 `rg -n -F '{{' prep/slides.html`로 남은 자리를 찾아 0줄로 만든다. 화면 위 노란 띠('채울 자리 N곳 · 이 장 M곳')도 이때 사라진다. 숫자는 설명.md '외울 숫자'와 같은지 다시 본다.
 - 보는 법(사람에게 알린다): 다음은 오른쪽 화살표·스페이스·PageDown·Enter·클릭, 이전은 왼쪽 화살표·PageUp·화면 왼쪽 4분의 1 클릭, Home·End, `S` 2분 판과 전체 바꾸기, `A` 부록 보이기·숨기기, `N` 발표자 메모, `F` 전체 화면, `H` 도움말. 주소 끝에 `?short`를 붙이면 2분 판으로, `#부록`이면 부록 첫 장으로, `#6`이면 6장으로 열린다.
 - PDF: 사람이 Browser에서 연 화면에서 Ctrl+P를 누르고 대상 'PDF로 저장', 여백 없음, 배경 그래픽 켜기를 고른다. 모든 장과 부록이 장마다 한 쪽(16:9 가로)으로 나오고, 메모·진행 막대·노란 띠는 나오지 않는다. 샌드박스에 `chromium`이나 `google-chrome`이 이미 있으면 `chromium --headless --print-to-pdf=prep/slides.pdf "file://$PWD/prep/slides.html"`로 만들어도 된다. 없으면 설치하지 않는다.
-- 사람이 Browser에서 보려면 서버가 있어야 한다. CONTRACT.md '포트'에 prep 포트가 없으면 lead에 요청한다. `python3 -m http.server <포트> --bind 0.0.0.0 --directory prep`을 백그라운드로 띄우고 `curl`로 `/slides.html` 응답을 확인한 뒤 포트와 경로(`/slides.html`, 2분 판은 `/slides.html?short`)를 알린다. 다 보면 끈다(AGENTS.md '화면과 서버').
+- 사람이 Browser에서 보려면 서버가 있어야 한다. CONTRACT.md '포트'에 prep 포트가 없으면 lead에 요청한다. `python3 -m http.server <포트> --bind 0.0.0.0 --directory prep`을 글자 그대로 백그라운드로 띄우고(작업 폴더 전체를 여는 서버를 따로 만들지 않는다) `curl`로 `/slides.html` 응답을 확인한 뒤 포트와 경로(`/slides.html`, 2분 판은 `/slides.html?short`)를 알린다. 다 보면 끈다(AGENTS.md '화면과 서버').
 - 사람이 대화로 디자인(색, 글자 크기, 배치), 내용, 장 순서·추가·삭제, 형식(HTML, PDF 인쇄, 되면 PPTX)을 고쳐 달라고 하면 그대로 고친다. 고친 뒤 남은 자리 확인과 서버 응답 확인을 다시 한다. 숫자는 이때도 근거가 있는 것만 쓰고, 근거가 없으면 그 점을 말한다.
 - PPTX는 사람이 원하고 `python3 -c "import pptx"`가 될 때만 만든다(.venv가 있으면 `.venv/bin/python -c "import pptx"`도 본다). 되면 `prep/make_pptx.py`로 HTML과 같은 장 구성·순서·문장·숫자로 `prep/slides.pptx`(16:9)를 만든다. 비교 막대는 지금 방식 회색, 새 방식 같은 강조색으로, 발표자 메모는 각 장의 노트에, 부록은 맨 뒤에 둔다. 안 되면 사람에게 알리고 HTML로 한다. 패키지 설치는 lead만 한다.
 - 띄우는 곳과 제출 여부는 그날 안내를 따른다.
