@@ -3,210 +3,695 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{제목}}</title>
+<title>{{제목: 무엇을 하는 무엇}}</title>
 <!--
-발표 화면 틀. prep 세션이 prep/slides.html로 복사해 채운다.
-- 채울 곳은 이중 중괄호로 감싼 자리다. 다 채운 뒤 rg -n -F 로 남은 자리를 찾는다.
-- 필요 없는 장은 section째 지운다. 장을 더하려면 같은 꼴의 section을 복사한다.
-- 넘기기: 오른쪽 화살표·스페이스·PageDown·Enter는 다음, 왼쪽 화살표·PageUp·Backspace는 이전, Home·End는 처음·끝. 화면 왼쪽 4분의 1을 누르면 이전, 나머지는 다음.
-- 인쇄(Ctrl+P)하면 장마다 한 쪽이다. 대상을 'PDF로 저장', 여백 없음, 배경 그래픽 켜기로 고른다.
-- 외부 파일·인터넷을 쓰지 않는다. 글꼴은 시스템 글꼴이다.
+발표 화면 틀. prep 세션이 prep/slides.html로 복사해 채운다. 외부 파일·인터넷·외부 글꼴을 쓰지 않는다.
+- 채울 곳은 이중 중괄호로 감싼 자리다. 화면 위 노란 띠가 남은 자리 수(전체, 이 장)를 알려 준다. 다 채운 뒤 rg -n -F 로 남은 자리를 찾는다.
+- 장(section.slide) 하나에 메시지 하나. h2가 그 장의 한 문장이다.
+- data-short: 2분 판에 나오는 장. data-appendix: 부록(기본 숨김). data-optional: 안 쓰면 그 요소째 지우는 선택 부분.
+- 막대: .metric의 data-old, data-new에 숫자만 넣으면 길이·차이가 계산된다. data-better="lower"(작을수록 좋음, 기본) 또는 "higher". data-max로 눈금 최댓값을 정할 수 있다.
+- 확인 수준: .levels의 data-level에 1(동작 확인), 2(주어진 자료 안의 효과), 3(현장 효과) 중 하나.
+- 발표자 메모: 각 장의 aside.note. 화면에서 N으로 보이기·숨기기, 인쇄에는 안 나온다.
+- 키: 다음(오른쪽 화살표, 아래 화살표, 스페이스, PageDown, Enter), 이전(왼쪽 화살표, 위 화살표, PageUp, Backspace), Home, End, S(2분 판), A(부록), N(메모), F(전체 화면), H 또는 물음표(도움말). 화면 왼쪽 4분의 1 클릭은 이전, 나머지는 다음.
+- 주소: slides.html?short 는 2분 판으로, #부록 은 부록 첫 장으로, #6 은 6번째 장으로 연다.
+- 인쇄(Ctrl+P): 대상 'PDF로 저장', 여백 없음, 배경 그래픽 켜기. 모든 장과 부록이 장마다 한 쪽(16:9)으로 나온다.
 -->
 <style>
-  :root {
-    --bg: #ffffff;
-    --fg: #1a1d23;
-    --muted: #5b6170;
-    --accent: #1f5fbf;
-    --line: #d9dde5;
-    --soft: #f3f6fb;
-    --warn: #b42318;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
-  body {
-    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Noto Sans CJK KR", "NanumGothic", sans-serif;
-    line-height: 1.45;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
-  }
-  .slide {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 3vh;
-    width: 100vw;
-    min-height: 100vh;
-    padding: 7vh 7vw;
-    font-size: clamp(20px, 3.4vmin, 42px);
-  }
-  body.deck .slide { display: none; height: 100vh; overflow: hidden; }
-  body.deck .slide.on { display: flex; }
-  h1, h2, p, ul { margin: 0; }
-  h1 { font-size: clamp(34px, 7vmin, 88px); line-height: 1.2; }
-  h2 { font-size: clamp(28px, 5.5vmin, 66px); color: var(--accent); border-bottom: 4px solid var(--line); padding-bottom: 1.5vh; }
-  ul { padding-left: 1.2em; }
-  li { margin: 0.45em 0; }
-  .lead { font-size: 1.15em; color: var(--muted); }
-  .stat { display: flex; align-items: baseline; gap: 2vw; flex-wrap: wrap; }
-  .big { font-size: clamp(44px, 11vmin, 150px); font-weight: 800; color: var(--accent); line-height: 1.05; }
-  .cmd { font-family: Consolas, "D2Coding", "Courier New", monospace; background: var(--soft); border-left: 6px solid var(--accent); padding: 0.5em 0.8em; font-size: 0.85em; }
-  .next { font-weight: 700; }
-  .src { font-size: clamp(14px, 2vmin, 22px); color: var(--muted); }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border-bottom: 2px solid var(--line); padding: 0.45em 0.6em; text-align: left; vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; }
-  td.num { font-weight: 800; color: var(--accent); }
-  .flow { display: flex; align-items: center; gap: 1.5vw; flex-wrap: wrap; }
-  .box { border: 3px solid var(--accent); border-radius: 12px; background: var(--soft); padding: 0.8em 1em; font-weight: 700; }
-  .arrow { color: var(--muted); font-size: 1.4em; }
-  #pageno { position: fixed; right: 2vw; bottom: 2vh; color: var(--muted); font-size: clamp(14px, 2vmin, 22px); }
-  #todo { position: fixed; left: 0; right: 0; top: 0; display: none; background: var(--warn); color: #ffffff; padding: 0.4em 1em; font-size: 16px; }
+:root {
+  --page: #e9edf2;
+  --paper: #ffffff;
+  --ink: #14213d;
+  --ink2: #48556e;
+  --ink3: #7b869a;
+  --line: #dfe4ec;
+  --tint: #f4f6f9;
+  --accent: #0b7a85;
+  --accent-ink: #075d66;
+  --accent-soft: #e3f2f3;
+  --old: #a6aebb;
+  --old-soft: #eef0f4;
+  --old-ink: #5e6879;
+  --mark: #fff1bf;
+  --mark-ink: #7a5200;
+  --font: system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
 
-  @page { size: 254mm 142.875mm; margin: 0; }
-  @media print {
-    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    body.deck .slide, .slide {
-      display: flex !important;
-      width: 254mm;
-      height: 142.875mm;
-      min-height: 0;
-      overflow: hidden;
-      padding: 12mm 16mm;
-      gap: 5mm;
-      font-size: 20pt;
-      break-after: page;
-      page-break-after: always;
-    }
-    .slide:last-of-type { break-after: auto; page-break-after: auto; }
-    h1 { font-size: 36pt; }
-    h2 { font-size: 28pt; padding-bottom: 3mm; }
-    .big { font-size: 54pt; }
-    .src { font-size: 11pt; }
-    #pageno, #todo { display: none !important; }
-  }
+/* 무대: 1600x900 한 장을 화면에 맞게 확대·축소한다 */
+#deck { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; counter-reset: pg; }
+.slide {
+  position: absolute; inset: 0;
+  display: none; flex-direction: column; gap: 28px;
+  padding: 72px 96px 96px;
+  background: var(--paper);
+  font-size: 28px; line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 10px 40px rgba(20, 33, 61, .12);
+  overflow: hidden;
+  counter-increment: pg;
+}
+.slide.on { display: flex; }
+.note { display: none !important; }
+
+/* 머리 */
+.kicker { font-size: 20px; font-weight: 700; letter-spacing: .06em; color: var(--accent); display: flex; gap: 12px; align-items: center; }
+.kicker .n { display: inline-block; min-width: 40px; padding: 2px 10px; border-radius: 6px; background: var(--accent-soft); text-align: center; }
+h1 { font-size: 80px; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+h2 { font-size: 50px; font-weight: 750; line-height: 1.25; letter-spacing: -.015em; max-width: 1300px; }
+.lead { font-size: 34px; color: var(--ink2); line-height: 1.4; max-width: 1250px; }
+.src { margin-top: auto; font-size: 19px; color: var(--ink3); }
+.src b { font-weight: 600; color: var(--ink2); }
+.grow { flex: 1; min-height: 0; }
+.row { display: flex; gap: 28px; }
+.row > * { flex: 1; min-width: 0; }
+.muted { color: var(--ink2); }
+.small { font-size: 22px; }
+
+/* 아래: 진행 막대, 쪽 번호, 과제 이름 */
+.foot { position: absolute; left: 96px; right: 96px; bottom: 30px; display: flex; justify-content: space-between; align-items: center; font-size: 17px; color: var(--ink3); }
+.foot .task { font-weight: 600; }
+.pg-print { display: none; }
+#progress { position: absolute; left: 0; bottom: 0; height: 6px; width: 0; background: var(--accent); transition: width .25s ease; z-index: 2; }
+#track { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--line); z-index: 1; }
+
+/* 카드와 칩 */
+.card { background: var(--tint); border-radius: 18px; padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; }
+.card.old { background: var(--old-soft); }
+.card.accent { background: var(--accent-soft); }
+.card h3 { font-size: 22px; font-weight: 700; color: var(--ink2); letter-spacing: .02em; }
+.card.accent h3 { color: var(--accent-ink); }
+.card.old h3 { color: var(--old-ink); }
+.num { font-size: 76px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: var(--ink); }
+.num .u { font-size: 30px; font-weight: 700; margin-left: 6px; color: var(--ink2); }
+.stat3 .card { justify-content: center; gap: 14px; }
+.stat3 .num { font-size: 104px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 999px; font-size: 20px; font-weight: 700; background: var(--accent-soft); color: var(--accent-ink); }
+.chip.old { background: var(--old-soft); color: var(--old-ink); }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.dot.old { background: var(--old); }
+
+/* 1. 결론 */
+.s-hero { justify-content: center; gap: 30px; }
+.hero { display: flex; flex-direction: column; gap: 6px; padding: 26px 0 8px; border-top: 3px solid var(--line); }
+.hero .what { font-size: 28px; font-weight: 700; color: var(--ink2); }
+.hero .nums { display: flex; align-items: flex-end; gap: 36px; }
+.hero .was, .hero .now { display: flex; flex-direction: column; }
+.hero .was b { font-size: 120px; font-weight: 800; color: var(--old); line-height: 1; letter-spacing: -.03em; }
+.hero .now b { font-size: 190px; font-weight: 850; color: var(--accent); line-height: .95; letter-spacing: -.04em; }
+.hero .nums i { font-style: normal; font-size: 20px; font-weight: 700; color: var(--ink3); margin-top: 10px; }
+.hero .to { font-size: 80px; color: var(--ink3); padding-bottom: 46px; }
+.hero .unit { font-size: 52px; font-weight: 800; color: var(--accent-ink); padding-bottom: 52px; }
+
+/* 3. 담당자 */
+.finds { display: flex; flex-direction: column; gap: 16px; }
+.find { display: grid; grid-template-columns: 96px 1fr 50px 1fr; align-items: center; gap: 18px; padding: 18px 24px; background: var(--tint); border-radius: 16px; }
+.qn { font-size: 26px; font-weight: 800; color: var(--accent-ink); background: var(--accent-soft); border-radius: 10px; text-align: center; padding: 6px 0; }
+.find .heard { font-size: 26px; }
+.find .changed { font-size: 26px; font-weight: 700; color: var(--accent-ink); }
+.find .ar, .ar { color: var(--ink3); font-size: 34px; text-align: center; }
+.clash { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 18px; align-items: stretch; }
+.clash .card { padding: 20px 26px; font-size: 24px; }
+
+/* 4. 흐름 */
+.flow { display: flex; align-items: stretch; gap: 0; }
+.flow .box { flex: 1; min-width: 0; min-height: 250px; border: 3px solid var(--line); border-radius: 18px; padding: 24px 26px; background: var(--paper); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.flow .box h3 { font-size: 20px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; }
+.flow .box .t { font-size: 30px; font-weight: 750; line-height: 1.3; }
+.flow .box .d { font-size: 21px; color: var(--ink2); }
+.flow .box.out { border-color: var(--accent); background: var(--accent-soft); }
+.flow .box.out h3 { color: var(--accent-ink); }
+.flow .link { width: 64px; flex: none; position: relative; }
+.flow .link::before { content: ""; position: absolute; left: 10px; right: 18px; top: 50%; height: 4px; margin-top: -2px; background: var(--ink3); }
+.flow .link::after { content: ""; position: absolute; right: 6px; top: 50%; margin-top: -11px; border: 11px solid transparent; border-left: 14px solid var(--ink3); border-right: 0; }
+.flow .grp { display: contents; }
+
+/* 5. 데모 */
+.steps { display: flex; gap: 26px; }
+.step { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.step .hd { display: flex; align-items: center; gap: 14px; }
+.step .k { width: 52px; height: 52px; flex: none; border-radius: 50%; background: var(--accent); color: #fff; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.step .t { font-size: 30px; font-weight: 750; line-height: 1.3; }
+.step .d { font-size: 23px; color: var(--ink2); }
+.step .time { margin-left: auto; font-size: 20px; font-weight: 700; color: var(--ink3); white-space: nowrap; }
+.shot { aspect-ratio: 16 / 10; border-radius: 14px; background: var(--tint); border: 2px dashed var(--line); display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; font-size: 19px; color: var(--ink3); overflow: hidden; }
+.shot img { width: 100%; height: 100%; object-fit: contain; }
+.shot:has(img) { border: 2px solid var(--line); padding: 0; background: var(--paper); }
+
+/* 6. 비교 막대 */
+.cmp { display: grid; grid-template-columns: 1fr 380px; gap: 44px; }
+.metrics { display: flex; flex-direction: column; gap: 34px; }
+.legend { display: flex; gap: 28px; font-size: 21px; font-weight: 700; color: var(--ink2); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.metric { display: flex; flex-direction: column; gap: 10px; }
+.metric .m-head { display: flex; align-items: baseline; gap: 18px; }
+.metric .m-name { font-size: 28px; font-weight: 750; }
+.metric .m-delta { margin-left: auto; font-size: 26px; font-weight: 800; color: var(--accent-ink); white-space: nowrap; }
+.metric .m-delta.worse { color: var(--old-ink); }
+.bar-row { display: grid; grid-template-columns: 112px 1fr; align-items: center; gap: 16px; }
+.bar-row .who { font-size: 19px; font-weight: 700; color: var(--ink3); text-align: right; }
+.bar-row .tr { display: flex; align-items: center; gap: 14px; height: 56px; }
+.bar { height: 100%; border-radius: 8px; background: var(--old); min-width: 6px; transition: width .4s ease; }
+.bar.new { background: var(--accent); }
+.bar.nan { background: repeating-linear-gradient(45deg, var(--old-soft) 0 10px, var(--paper) 10px 20px); border: 2px dashed var(--old); width: 40%; }
+.bar-row .val { font-size: 30px; font-weight: 800; white-space: nowrap; }
+.bar-row .val.old { color: var(--old-ink); }
+.bar-row .val.new { color: var(--accent-ink); }
+.same { font-size: 22px; color: var(--ink2); background: var(--tint); border-radius: 14px; padding: 16px 22px; }
+.levels { display: flex; flex-direction: column; gap: 12px; }
+.levels > h3 { font-size: 20px; font-weight: 700; color: var(--ink3); letter-spacing: .06em; }
+.lv { display: grid; grid-template-columns: 40px 1fr; gap: 4px 14px; padding: 16px 18px; border-radius: 14px; border: 2px solid var(--line); color: var(--ink3); }
+.lv .c { grid-row: span 2; width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); align-self: center; }
+.lv b { font-size: 23px; }
+.lv .s { font-size: 18px; }
+.lv.on { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.lv.on .c { border-color: var(--accent); background: var(--accent); }
+.lv.off .s::after { content: " · 아직 안 잼"; font-weight: 700; }
+
+/* 7, 8 */
+.col { display: flex; flex-direction: column; gap: 14px; }
+.li { position: relative; padding-left: 30px; font-size: 25px; line-height: 1.4; }
+.li::before { content: ""; position: absolute; left: 4px; top: .55em; width: 12px; height: 12px; border-radius: 3px; background: var(--accent); }
+.card.old .li::before { background: var(--old); }
+.kv { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: baseline; font-size: 25px; padding: 12px 0; border-bottom: 2px solid var(--line); }
+.kv:last-child { border-bottom: 0; }
+.kv > b { font-size: 21px; color: var(--accent-ink); }
+.fix { display: grid; grid-template-columns: auto 1fr 50px 1fr 50px 1fr; align-items: center; gap: 16px; padding: 22px 28px; border-radius: 18px; background: var(--accent-soft); font-size: 24px; }
+.fix > b { font-size: 21px; color: var(--accent-ink); white-space: nowrap; }
+.fix .ar { font-size: 30px; }
+
+/* 9. 다음 */
+.nexts { display: flex; flex-direction: column; gap: 18px; }
+.nx { display: grid; grid-template-columns: 64px 1fr 1fr; gap: 24px; align-items: center; padding: 20px 26px; border-radius: 16px; background: var(--tint); }
+.nx .k { font-size: 40px; font-weight: 850; color: var(--accent); }
+.nx .t { font-size: 29px; font-weight: 750; }
+.nx .d { font-size: 22px; color: var(--ink2); }
+.close { font-size: 40px; font-weight: 800; color: var(--accent-ink); border-left: 8px solid var(--accent); padding: 6px 0 6px 26px; }
+
+/* 부록 */
+.slide[data-appendix] { background: #fbfcfd; }
+.slide[data-appendix] .kicker { color: var(--ink2); }
+.slide[data-appendix] .kicker .n { background: var(--old-soft); }
+table { border-collapse: collapse; width: 100%; font-size: 23px; }
+th, td { text-align: left; padding: 14px 16px; border-bottom: 2px solid var(--line); vertical-align: top; }
+th { font-size: 19px; color: var(--ink3); font-weight: 700; letter-spacing: .04em; }
+td code, .mono { font-family: Consolas, 'D2Coding', 'DejaVu Sans Mono', monospace; font-size: .9em; }
+
+/* 채울 자리 표시(화면 전용 띠) */
+.ph { background: var(--mark); color: var(--mark-ink); border-radius: 6px; padding: 0 .2em; box-decoration-break: clone; -webkit-box-decoration-break: clone; font-weight: inherit; }
+.opt-pending { outline: 3px dashed #e3b341; outline-offset: 4px; position: relative; }
+.opt-pending::after { content: "선택: 안 쓰면 이 부분째 지움"; position: absolute; right: 6px; top: -16px; z-index: 3; font-size: 15px; font-weight: 700; color: var(--mark-ink); background: var(--mark); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.shot.opt-pending::after { top: 6px; }
+#todo { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); z-index: 20; display: none; padding: 6px 16px; border-radius: 999px; background: var(--mark); color: var(--mark-ink); font: 700 14px/1.4 var(--font); box-shadow: 0 2px 8px rgba(0, 0, 0, .12); white-space: nowrap; }
+
+/* 발표자 메모 패널 */
+#notes { position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; z-index: 15; display: none; overflow: auto; padding: 18px 28px; background: #10192e; color: #e8edf5; font: 400 19px/1.6 var(--font); }
+#notes .h { font-size: 13px; font-weight: 700; letter-spacing: .08em; color: #8fa3c4; margin-bottom: 6px; }
+#notes .ph { background: #4a3d10; color: #ffe08a; }
+body.notes-on #notes { display: block; }
+
+/* 도움말 */
+#help { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; background: rgba(16, 25, 46, .55); }
+#help.on { display: flex; }
+#help .in { background: var(--paper); border-radius: 16px; padding: 26px 32px; font: 400 16px/1.7 var(--font); color: var(--ink); max-width: 560px; box-shadow: 0 10px 40px rgba(0, 0, 0, .25); }
+#help b { display: inline-block; min-width: 170px; color: var(--accent-ink); }
+
+/* 인쇄: 장마다 한 쪽, 메모·진행 막대·띠 숨김, 부록 포함 */
+@page { size: 1600px 900px; margin: 0; }
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { height: auto; overflow: visible; background: var(--paper); }
+  #deck { position: static; transform: none !important; width: 1600px; height: auto; }
+  .slide { display: flex !important; position: relative; inset: auto; width: 1600px; height: 900px; box-shadow: none; break-after: page; page-break-after: always; }
+  .slide:last-of-type { break-after: auto; page-break-after: auto; }
+  #progress, #track, #todo, #notes, #help { display: none !important; }
+  .pg-screen { display: none; }
+  .pg-print { display: inline; }
+  .pg-print::before { content: counter(pg); }
+  .opt-pending::after { display: none; }
+  .bar { transition: none; }
+}
 </style>
 </head>
-<body>
+<body data-task="{{과제 이름: 오른쪽 아래에 작게 나옴}}">
+<div id="deck">
 
-<section class="slide">
-  <h1>{{제목: 무엇을 하는 무엇}}</h1>
-  <p class="lead">{{한 줄 요약: 누구의 어떤 일을 어떻게 바꾸나}}</p>
-  <p class="src">{{이름}} · {{과제 이름}}</p>
-</section>
-
-<section class="slide">
-  <h2>문제와 지금 비용</h2>
-  <p>{{문제: 누가 무엇을 어떻게 하고 있어서 무엇이 새나, 한 문장}}</p>
-  <div class="stat">
-    <span class="big">{{지금 비용 숫자}}</span>
-    <span>{{그 숫자가 무엇인지: 단위, 기간, 대상}}</span>
+<!-- 1. 결론 -->
+<section class="slide s-hero" data-short>
+  <div class="kicker"><span>{{이름}}</span><span>·</span><span>{{과제 이름}}</span></div>
+  <h1>{{제목: 누구의 무엇을 바꾸는 무엇}}</h1>
+  <div class="hero">
+    <div class="what">{{핵심 숫자가 무엇인지: 같은 데이터에서 놓친 불량}}</div>
+    <div class="nums">
+      <div class="was"><b>{{지금 값: 50}}</b><i>지금 방식</i></div>
+      <div class="to">→</div>
+      <div class="now"><b>{{새 값: 30}}</b><i>새 방식</i></div>
+      <div class="unit">{{단위: 건}}</div>
+    </div>
   </div>
-  <p class="src">근거: {{파일:줄 또는 담당자 답 Q번호}}</p>
+  <p class="lead">{{한 줄 요약: 누가 무엇을 받아 어떤 일이 줄어드나}}</p>
+  <div><span class="chip"><span class="dot"></span>{{확인 수준: 주어진 자료 안의 효과}}</span></div>
+  <aside class="note">{{말할 것: 결론 한 문장과 핵심 숫자 하나. 2분 판 ①}}</aside>
 </section>
 
-<section class="slide">
-  <h2>만든 것</h2>
-  <ul>
-    <li>{{입력: 무엇을 넣나}}</li>
-    <li>{{처리: 무엇을 어떤 방법으로}}</li>
-    <li>{{결과: 누가 무엇을 받나}}</li>
-  </ul>
-  <p class="cmd">{{실행 한 줄 또는 화면 경로}}</p>
+<!-- 2. 문제와 지금 비용 -->
+<section class="slide" data-short>
+  <div class="kicker"><span class="n">02</span>문제와 지금 비용</div>
+  <h2>{{이 장의 한 문장: 누가 무엇에 매달 얼마를 잃나}}</h2>
+  <div class="row grow stat3">
+    <div class="card"><h3>{{비용 1 이름: 한 달 작업 시간}}</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{무엇의 숫자: 대상, 기간}}</p></div>
+    <div class="card"><h3>{{비용 2 이름: 놓친 건수}}</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{무엇의 숫자: 대상, 기간}}</p></div>
+    <div class="card" data-optional><h3>{{비용 3 이름}}</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{무엇의 숫자: 대상, 기간}}</p></div>
+  </div>
+  <p class="lead small">{{지금 방식: 누가 무엇을 어떻게 하고 있나, 한 문장}}</p>
+  <p class="src"><b>근거</b> {{파일:줄, 담당자 답 Q번호}}</p>
+  <aside class="note">{{말할 것: 문제와 비용 숫자. 2분 판 ②}}</aside>
 </section>
 
-<!-- 선택 장: 구조도가 필요 없으면 이 section째 지운다. 상자 수는 모듈 수에 맞춘다. -->
+<!-- 3. 담당자에게서 알아낸 것 -->
 <section class="slide">
-  <h2>구조</h2>
+  <div class="kicker"><span class="n">03</span>담당자에게서 알아낸 것</div>
+  <h2>{{이 장의 한 문장: 문답으로 무엇의 정의가 바뀌었나}}</h2>
+  <div class="finds">
+    <div class="find"><span class="qn">{{Q7}}</span><span class="heard">{{들은 것: 재검사는 따로 집계}}</span><span class="ar">→</span><span class="changed">{{바꾼 것: 수율 정의를 바꿈}}</span></div>
+    <div class="find"><span class="qn">{{Q번호}}</span><span class="heard">{{들은 것}}</span><span class="ar">→</span><span class="changed">{{바꾼 것}}</span></div>
+    <div class="find" data-optional><span class="qn">{{Q번호}}</span><span class="heard">{{들은 것}}</span><span class="ar">→</span><span class="changed">{{바꾼 것}}</span></div>
+  </div>
+  <div class="clash" data-optional>
+    <div class="card old"><h3>{{입장 A: 누구}}</h3><p>{{원하는 것}}</p></div>
+    <div class="card old"><h3>{{입장 B: 누구}}</h3><p>{{원하는 것}}</p></div>
+    <div class="card accent"><h3>고른 것</h3><p>{{무엇을 골랐고 왜, D번호}}</p></div>
+  </div>
+  <p class="src"><b>근거</b> {{INTERVIEW.md Q번호와 답한 시각, DECISIONS.md D번호}}</p>
+  <aside class="note">{{말할 것: 담당자에게 무엇을 물었고 무엇이 바뀌었나, 부딪친 입장과 고른 이유}}</aside>
+</section>
+
+<!-- 4. 접근 -->
+<section class="slide">
+  <div class="kicker"><span class="n">04</span>접근</div>
+  <h2>{{이 장의 한 문장: 무엇을 넣으면 누가 무엇을 받나}}</h2>
   <div class="flow">
-    <div class="box">{{입력 데이터}}</div>
-    <div class="arrow">→</div>
-    <div class="box">{{모듈 1: 파일 이름과 하는 일}}</div>
-    <div class="arrow">→</div>
-    <div class="box">{{모듈 2: 파일 이름과 하는 일}}</div>
-    <div class="arrow">→</div>
-    <div class="box">{{결과}}</div>
+    <div class="box"><h3>입력</h3><div class="t">{{입력: 무엇을}}</div><div class="d">{{파일 이름, 형식, 건수}}</div></div>
+    <div class="link"></div>
+    <div class="box"><h3>처리</h3><div class="t">{{처리 1: 무엇을 어떤 방법으로}}</div><div class="d">{{모듈 파일 이름}}</div></div>
+    <div class="grp" data-optional><div class="link"></div><div class="box"><h3>처리</h3><div class="t">{{처리 2}}</div><div class="d">{{모듈 파일 이름}}</div></div></div>
+    <div class="link"></div>
+    <div class="box out"><h3>출력</h3><div class="t">{{결과: 누가 무엇을 받나}}</div><div class="d">{{결과 파일 또는 화면}}</div></div>
   </div>
-  <p class="src">근거: {{CONTRACT.md 파일 주인 또는 코드 위치}}</p>
+  <div class="row">
+    <div class="card accent"><h3>왜 이 방법</h3><p>{{고른 이유 한 문장, D번호}}</p></div>
+    <div class="card old"><h3>버린 대안</h3><p>{{대안: 버린 이유 한 줄}}</p></div>
+  </div>
+  <p class="src"><b>근거</b> {{CONTRACT.md 파일 주인, 실행 명령}}</p>
+  <aside class="note">{{말할 것: 흐름을 왼쪽에서 오른쪽으로 한 번, 왜 이 방법인가}}</aside>
 </section>
 
+<!-- 5. 데모 흐름 -->
 <section class="slide">
-  <h2>같은 데이터로 비교</h2>
+  <div class="kicker"><span class="n">05</span>데모</div>
+  <h2>{{이 장의 한 문장: 실행 한 번으로 무엇이 나오나}}</h2>
+  <div class="steps grow">
+    <div class="step"><div class="hd"><span class="k">1</span><span class="t">{{보여 줄 화면 1}}</span><span class="time">{{20초}}</span></div><p class="d">{{무엇을 넣고 무엇을 보나}}</p><figure class="shot" data-optional>{{캡처 1: img 태그로 바꾸거나 이 칸째 지움}}</figure></div>
+    <div class="step"><div class="hd"><span class="k">2</span><span class="t">{{보여 줄 화면 2}}</span><span class="time">{{30초}}</span></div><p class="d">{{무엇이 바뀌나}}</p><figure class="shot" data-optional>{{캡처 2: img 태그로 바꾸거나 이 칸째 지움}}</figure></div>
+    <div class="step"><div class="hd"><span class="k">3</span><span class="t">{{보여 줄 화면 3}}</span><span class="time">{{30초}}</span></div><p class="d">{{결과에서 짚을 숫자}}</p><figure class="shot" data-optional>{{캡처 3: img 태그로 바꾸거나 이 칸째 지움}}</figure></div>
+  </div>
+  <p class="src"><b>실행</b> <span class="mono">{{실행 한 줄 또는 화면 경로}}</span></p>
+  <aside class="note">{{말할 것: 단계마다 한 문장. 멈추면 대신 보여 줄 것(미리 돌려 둔 결과 파일)}}</aside>
+</section>
+
+<!-- 6. 같은 데이터 비교 -->
+<section class="slide" data-short>
+  <div class="kicker"><span class="n">06</span>같은 데이터로 비교</div>
+  <h2>{{이 장의 한 문장: 같은 데이터에서 무엇이 얼마나 나아졌나}}</h2>
+  <div class="cmp grow">
+    <div class="metrics">
+      <div class="legend"><span><span class="dot old"></span>지금 방식</span><span><span class="dot"></span>새 방식</span></div>
+      <div class="metric" data-old="{{지금 값 1: 숫자만}}" data-new="{{새 값 1: 숫자만}}" data-unit="{{단위 1}}" data-better="lower">
+        <div class="m-head"><span class="m-name">{{지표 1: 놓친 불량 건수}}</span></div>
+      </div>
+      <div class="metric" data-optional data-old="{{지금 값 2: 숫자만}}" data-new="{{새 값 2: 숫자만}}" data-unit="{{단위 2}}" data-better="higher">
+        <div class="m-head"><span class="m-name">{{지표 2}}</span></div>
+      </div>
+      <p class="same">{{같은 데이터: 기간과 건수, 결과를 보기 전에 정한 판정 기준}}</p>
+    </div>
+    <div class="levels" data-level="{{확인 수준 1, 2, 3 중 하나}}">
+      <h3>확인 수준</h3>
+      <div class="lv" data-n="1"><span class="c"></span><b>동작 확인</b><span class="s">돌아가고 테스트 통과</span></div>
+      <div class="lv" data-n="2"><span class="c"></span><b>주어진 자료 안의 효과</b><span class="s">같은 데이터로 지금 방식과 비교</span></div>
+      <div class="lv" data-n="3"><span class="c"></span><b>현장 효과</b><span class="s">현장에서 잰 기록</span></div>
+    </div>
+  </div>
+  <p class="src"><b>근거</b> {{exp/비교표.md 또는 명령과 출력 위치}}</p>
+  <aside class="note">{{말할 것: 비교 숫자, 같은 데이터라는 점, 확인 수준. 2분 판 ③}}</aside>
+</section>
+
+<!-- 7. 어떻게 믿을 수 있나 -->
+<section class="slide">
+  <div class="kicker"><span class="n">07</span>어떻게 믿을 수 있나</div>
+  <h2>{{이 장의 한 문장: 무엇으로 맞는지 확인했나}}</h2>
+  <div class="row grow">
+    <div class="card"><h3>검증</h3><div class="num">{{12/12}}<span class="u">{{통과}}</span></div><p class="li">{{기대값을 코드와 다른 방법으로 정한 것: 무엇으로, 몇 건, 누가 계산}}</p></div>
+    <div class="card"><h3>일부러 깨뜨려 본 것</h3><p class="li">{{넣은 것 → 나온 결과}}</p><p class="li">{{넣은 것 → 나온 결과}}</p></div>
+    <div class="card old"><h3>한계</h3><p class="li">{{확인하지 못한 것}}</p><p class="li">{{가정한 것}}</p></div>
+  </div>
+  <p class="src"><b>근거</b> {{테스트 파일과 명령}}</p>
+  <aside class="note">{{말할 것: 기대값 출처, 깨뜨려 본 시험 하나, 한계 하나}}</aside>
+</section>
+
+<!-- 8. 사람과 AI -->
+<section class="slide" data-short>
+  <div class="kicker"><span class="n">08</span>사람과 AI</div>
+  <h2>{{이 장의 한 문장: 사람이 정하고 AI가 만든 방식}}</h2>
+  <div class="row grow">
+    <div class="card accent"><h3>사람이 정한 것</h3>
+      <div class="kv"><b>문제</b><span>{{무엇을 풀기로 했나, D번호}}</span></div>
+      <div class="kv"><b>지표</b><span>{{무엇으로 잴지}}</span></div>
+      <div class="kv"><b>맞바꿈</b><span>{{무엇을 얻고 무엇을 포기했나}}</span></div>
+    </div>
+    <div class="card"><h3>AI가 한 것</h3>
+      <p class="li">{{세션과 하위 에이전트가 나눠 한 일}}</p>
+      <p class="li">{{AI가 만든 것: 모듈, 테스트, 비교}}</p>
+      <p class="li" data-optional>{{AI가 혼자 정한 것과 사람이 확인한 것}}</p>
+    </div>
+  </div>
+  <div class="fix"><b>바로잡은 것</b><span>{{AI가 낸 것}}</span><span class="ar">→</span><span>{{사람이 본 문제}}</span><span class="ar">→</span><span>{{고친 결과}}</span></div>
+  <p class="src"><b>근거</b> {{DECISIONS.md D번호, 커밋}}</p>
+  <aside class="note">{{말할 것: Codex를 어떻게 나눠 썼나와 바로잡은 것 하나. 2분 판 ④, 이어서 ⑤ 한계와 다음 검증 한 문장}}</aside>
+</section>
+
+<!-- 9. 다음 단계 -->
+<section class="slide">
+  <div class="kicker"><span class="n">09</span>다음 단계</div>
+  <h2>{{이 장의 한 문장: 현장에서 무엇을 재면 효과를 아나}}</h2>
+  <div class="nexts">
+    <div class="nx"><span class="k">1</span><span class="t">{{다음 일 1}}</span><span class="d">{{누가, 언제, 무엇을 재나}}</span></div>
+    <div class="nx"><span class="k">2</span><span class="t">{{다음 일 2}}</span><span class="d">{{누가, 언제, 무엇을 재나}}</span></div>
+    <div class="nx" data-optional><span class="k">3</span><span class="t">{{다음 일 3}}</span><span class="d">{{누가, 언제, 무엇을 재나}}</span></div>
+  </div>
+  <p class="close">{{마지막 한 문장: 결론을 다시}}</p>
+  <aside class="note">{{말할 것: 다음 검증과 마지막 한 문장}}</aside>
+</section>
+
+<!-- 부록(질의응답 대비, 기본 숨김: A 키 또는 #부록) -->
+<section class="slide" data-appendix>
+  <div class="kicker"><span class="n">부록 1</span>상관인가 원인인가</div>
+  <h2>{{이 장의 한 문장: 어디까지 원인이라고 말할 수 있나}}</h2>
+  <div class="row grow">
+    <div class="card"><h3>본 것</h3><p class="li">{{데이터에서 함께 움직인 것}}</p></div>
+    <div class="card"><h3>원인이라고 보는 근거</h3><p class="li">{{담당자 답, 공정 순서, 시간 순서}}</p></div>
+    <div class="card old"><h3>확인하려면</h3><p class="li">{{현장에서 무엇을 바꿔 재야 하나}}</p></div>
+  </div>
+  <p class="src"><b>근거</b> {{파일:줄, Q번호}}</p>
+  <aside class="note">{{답할 것: 상관이라고 먼저 인정하고, 원인으로 보는 근거와 확인 방법}}</aside>
+</section>
+
+<section class="slide" data-appendix>
+  <div class="kicker"><span class="n">부록 2</span>표본과 범위</div>
+  <h2>{{이 장의 한 문장: 몇 건으로, 어느 범위에서 쟀나}}</h2>
+  <div class="row grow stat3">
+    <div class="card"><h3>건수</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{무엇의 건수}}</p></div>
+    <div class="card"><h3>기간·범위</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{기간, 라인, 제품}}</p></div>
+    <div class="card old"><h3>뺀 것</h3><div class="num">{{숫자}}<span class="u">{{단위}}</span></div><p class="small muted">{{무엇을 왜 뺐나}}</p></div>
+  </div>
+  <p class="src"><b>근거</b> {{data-profile 결과 위치, 명령}}</p>
+  <aside class="note">{{답할 것: 표본 수와 그 숫자가 말해 주는 범위}}</aside>
+</section>
+
+<section class="slide" data-appendix>
+  <div class="kicker"><span class="n">부록 3</span>틀린 사례</div>
+  <h2>{{이 장의 한 문장: 어디서 틀리고, 틀리면 어떻게 아나}}</h2>
   <table>
-    <thead>
-      <tr><th>지표</th><th>지금 방식</th><th>새 방식</th></tr>
-    </thead>
+    <thead><tr><th>사례</th><th>무엇이 틀렸나</th><th>왜</th><th>어떻게 알 수 있나</th></tr></thead>
     <tbody>
-      <tr><td>{{지표 1}}</td><td>{{지금 값 1}}</td><td class="num">{{새 값 1}}</td></tr>
-      <tr><td>{{지표 2}}</td><td>{{지금 값 2}}</td><td class="num">{{새 값 2}}</td></tr>
+      <tr><td>{{사례 1}}</td><td>{{결과}}</td><td>{{원인}}</td><td>{{알아채는 방법}}</td></tr>
+      <tr data-optional><td>{{사례 2}}</td><td>{{결과}}</td><td>{{원인}}</td><td>{{알아채는 방법}}</td></tr>
     </tbody>
   </table>
-  <p>{{같은 데이터: 기간과 건수, 결과를 보기 전에 정한 판정 기준}}</p>
-  <p class="src">근거: {{exp/비교표.md 또는 명령}} · 효과 종류: {{주어진 자료 안의 효과 / 실제 현장 효과}}</p>
+  <p class="src"><b>근거</b> {{work 파일 예상 밖 발견, exp 결과}}</p>
+  <aside class="note">{{답할 것: 실패를 먼저 보여 주고 대비책}}</aside>
 </section>
 
-<section class="slide">
-  <h2>검증 방법</h2>
-  <ul>
-    <li>{{기대값을 코드와 다른 방법으로 정한 것: 무엇으로, 몇 건}}</li>
-    <li>{{예외·경계 검사: 무엇을 넣어 어떤 결과가 나왔나}}</li>
-    <li>{{AI가 낸 결과를 확인하고 바로잡은 것}}</li>
-  </ul>
-  <p class="src">근거: {{테스트 파일 또는 명령}}</p>
+<section class="slide" data-appendix data-optional>
+  <div class="kicker"><span class="n">부록 4</span>모듈 지도</div>
+  <h2>{{이 장의 한 문장: 파일마다 하는 일}}</h2>
+  <table>
+    <thead><tr><th>파일</th><th>하는 일</th><th>입력 → 출력</th><th>만든 세션</th></tr></thead>
+    <tbody>
+      <tr><td><code>{{파일}}</code></td><td>{{하는 일}}</td><td>{{입력 → 출력}}</td><td>{{세션}}</td></tr>
+      <tr><td><code>{{파일}}</code></td><td>{{하는 일}}</td><td>{{입력 → 출력}}</td><td>{{세션}}</td></tr>
+    </tbody>
+  </table>
+  <p class="src"><b>근거</b> {{CONTRACT.md 파일 주인}}</p>
+  <aside class="note">{{답할 것: 모듈 질문이 나오면 이 표로}}</aside>
 </section>
 
-<section class="slide">
-  <h2>한계와 다음 단계</h2>
-  <ul>
-    <li>{{한계 1: 확인하지 못한 것}}</li>
-    <li>{{한계 2: 가정한 것}}</li>
-  </ul>
-  <p class="next">다음: {{다음 검증: 현장에서 무엇을 재면 효과를 아나}}</p>
-</section>
+<div id="track"></div><div id="progress"></div>
+</div>
 
-<div id="pageno"></div>
 <div id="todo"></div>
+<div id="notes"><div class="h">발표자 메모 · N 키로 닫기</div><div class="b"></div></div>
+<div id="help"><div class="in">
+  <div><b>다음</b>→ ↓ 스페이스 PageDown Enter, 클릭</div>
+  <div><b>이전</b>← ↑ PageUp Backspace, 왼쪽 4분의 1 클릭</div>
+  <div><b>처음 · 끝</b>Home · End</div>
+  <div><b>S</b>2분 판(1·2·6·8장)과 전체 바꾸기</div>
+  <div><b>A</b>부록 보이기·숨기기</div>
+  <div><b>N</b>발표자 메모</div>
+  <div><b>F</b>전체 화면</div>
+  <div><b>H 또는 ?</b>이 도움말</div>
+  <div><b>PDF</b>Ctrl+P, PDF로 저장, 여백 없음, 배경 그래픽 켜기</div>
+</div></div>
 
 <script>
 (function () {
-  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
-  if (!slides.length) return;
-  document.body.classList.add('deck');
-  var pageno = document.getElementById('pageno');
-  var i = 0;
+  var W = 1600, H = 900;
+  var OPEN = '{' + '{';
+  var deck = document.getElementById('deck');
+  var all = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+  if (!all.length) return;
+  var notesEl = document.getElementById('notes');
+  var helpEl = document.getElementById('help');
+  var todoEl = document.getElementById('todo');
+  var progress = document.getElementById('progress');
+  var st = { short: /[?&]short(=|&|$)/.test(location.search), appendix: false, notes: false };
+  var list = [], cur = null;
 
-  function show(n) {
-    i = Math.max(0, Math.min(slides.length - 1, n));
-    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); });
-    pageno.textContent = (i + 1) + ' / ' + slides.length;
-    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) { /* 파일로 열면 막힐 수 있다 */ }
+  function count(s) { return s.split(OPEN).length - 1; }
+  function isAp(s) { return s.hasAttribute('data-appendix'); }
+
+  // 남은 자리 수는 꾸미기 전에 센다(제목, body의 data-task 포함)
+  var total = count(document.documentElement.outerHTML);
+  var perSlide = all.map(function (s) { return count(s.outerHTML); });
+
+  // 쪽 아래: 쪽 번호와 과제 이름
+  var task = document.body.getAttribute('data-task') || '';
+  all.forEach(function (s) {
+    var f = document.createElement('div');
+    f.className = 'foot';
+    f.innerHTML = '<span><span class="pg-screen"></span><span class="pg-print"></span></span><span class="task"></span>';
+    f.querySelector('.task').textContent = task;
+    s.appendChild(f);
+  });
+
+  // 비교 막대: data-old, data-new 숫자로 길이와 차이를 계산한다
+  function num(v) {
+    if (v == null || v.indexOf(OPEN) >= 0) return NaN;
+    var t = String(v).replace(/[^0-9.\-]/g, '');
+    return t === '' ? NaN : parseFloat(t);
+  }
+  Array.prototype.forEach.call(deck.querySelectorAll('.metric'), function (m) {
+    var raw = { old: (m.getAttribute('data-old') || '').trim(), 'new': (m.getAttribute('data-new') || '').trim() };
+    var a = num(raw.old), b = num(raw['new']);
+    var unit = m.getAttribute('data-unit') || '';
+    if (unit.indexOf(OPEN) >= 0) unit = '';
+    var max = num(m.getAttribute('data-max') || '');
+    if (isNaN(max)) max = Math.max(isNaN(a) ? 0 : a, isNaN(b) ? 0 : b);
+    [['old', '지금 방식', a], ['new', '새 방식', b]].forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = '<span class="who"></span><div class="tr"><div class="bar"></div><span class="val"></span></div>';
+      row.querySelector('.who').textContent = r[1];
+      var bar = row.querySelector('.bar'), val = row.querySelector('.val');
+      bar.classList.add(r[0]);
+      val.classList.add(r[0]);
+      if (isNaN(r[2])) { bar.classList.add('nan'); val.textContent = '숫자 필요'; }
+      else {
+        bar.style.width = (max > 0 ? Math.max(1, r[2] / max * 82) : 1) + '%';
+        val.textContent = raw[r[0]] + (unit ? ' ' + unit : '');
+      }
+      m.appendChild(row);
+    });
+    if (!isNaN(a) && !isNaN(b)) {
+      var lower = (m.getAttribute('data-better') || 'lower') !== 'higher';
+      var d = document.createElement('span');
+      d.className = 'm-delta';
+      var better = lower ? b < a : b > a;
+      var word = b < a ? '줄어듦' : (b > a ? '늘어남' : '같음');
+      var diff = Math.abs(b - a);
+      var txt = a !== 0 && b !== a ? Math.round(diff / Math.abs(a) * 100) + '% ' + word : (b === a ? '같음' : diff + (unit ? ' ' + unit : '') + ' ' + word);
+      d.textContent = txt;
+      if (!better) d.classList.add('worse');
+      var head = m.querySelector('.m-head') || m;
+      head.appendChild(d);
+    }
+  });
+
+  // 확인 수준
+  Array.prototype.forEach.call(deck.querySelectorAll('.levels'), function (box) {
+    var lv = num(box.getAttribute('data-level') || '');
+    Array.prototype.forEach.call(box.querySelectorAll('.lv'), function (x) {
+      var n = parseInt(x.getAttribute('data-n'), 10);
+      if (!isNaN(lv)) x.classList.add(n <= lv ? 'on' : 'off');
+    });
+  });
+
+  // 선택 부분이 아직 비어 있으면 점선으로 표시한다
+  Array.prototype.forEach.call(deck.querySelectorAll('[data-optional]'), function (el) {
+    if (el.classList.contains('slide') || el.classList.contains('grp')) {
+      if (count(el.outerHTML) && el.classList.contains('grp')) {
+        Array.prototype.forEach.call(el.querySelectorAll('.box'), function (b) { b.classList.add('opt-pending'); });
+      }
+      return;
+    }
+    if (el.tagName !== 'TR' && count(el.outerHTML)) el.classList.add('opt-pending');
+  });
+
+  // 채울 자리 글자를 노란 띠로 보이게 한다
+  var re = /\{\{[^{}]*\}\}/g;
+  function mark(root) {
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), nodes = [], n;
+    while ((n = w.nextNode())) if (n.nodeValue.indexOf(OPEN) >= 0) nodes.push(n);
+    nodes.forEach(function (t) {
+      var s = t.nodeValue, frag = document.createDocumentFragment(), last = 0, m;
+      re.lastIndex = 0;
+      while ((m = re.exec(s))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+        var sp = document.createElement('span');
+        sp.className = 'ph';
+        sp.textContent = m[0];
+        frag.appendChild(sp);
+        last = m.index + m[0].length;
+      }
+      if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      t.parentNode.replaceChild(frag, t);
+    });
+  }
+  mark(deck);
+
+  function fit() {
+    var nh = st.notes ? notesEl.offsetHeight : 0;
+    var w = window.innerWidth, h = Math.max(100, window.innerHeight - nh);
+    var s = Math.min(w / W, h / H);
+    deck.style.transform = 'translate(' + ((w - W * s) / 2) + 'px,' + ((h - H * s) / 2) + 'px) scale(' + s + ')';
+  }
+
+  function rebuild() {
+    list = all.filter(function (s) {
+      if (isAp(s)) return st.appendix;
+      return !st.short || s.hasAttribute('data-short');
+    });
+  }
+  function nearest(s) {
+    if (list.indexOf(s) >= 0) return s;
+    for (var k = all.indexOf(s); k >= 0; k--) if (list.indexOf(all[k]) >= 0) return all[k];
+    return list[0];
+  }
+
+  function go(s) {
+    if (!s) return;
+    cur = s;
+    all.forEach(function (x) { x.classList.toggle('on', x === s); });
+    var main = list.filter(function (x) { return !isAp(x); });
+    var aps = list.filter(isAp);
+    var label, frac;
+    if (isAp(s)) { label = '부록 ' + (aps.indexOf(s) + 1) + ' / ' + aps.length; frac = 1; }
+    else { var p = main.indexOf(s); label = (p + 1) + ' / ' + main.length; frac = (p + 1) / main.length; }
+    if (st.short) label = '2분 판 · ' + label;
+    s.querySelector('.pg-screen').textContent = label;
+    progress.style.width = (frac * 100) + '%';
+    var note = s.querySelector('.note');
+    notesEl.querySelector('.b').innerHTML = note ? note.innerHTML : '<i>이 장에는 메모가 없다</i>';
+    var here = perSlide[all.indexOf(s)];
+    if (total > 0) {
+      todoEl.textContent = '채울 자리 ' + total + '곳 · 이 장 ' + here + '곳 · H 도움말';
+      todoEl.style.display = 'block';
+    }
+    try { history.replaceState(null, '', location.pathname + location.search + '#' + (all.indexOf(s) + 1)); } catch (e) { /* 파일로 열면 막힐 수 있다 */ }
+  }
+  function step(d) {
+    var k = list.indexOf(cur) + d;
+    if (k >= 0 && k < list.length) go(list[k]);
+  }
+
+  function toggleShort() { st.short = !st.short; rebuild(); go(nearest(cur)); }
+  function toggleAppendix() {
+    st.appendix = !st.appendix;
+    rebuild();
+    if (st.appendix) go(list.filter(isAp)[0] || cur);
+    else go(nearest(cur));
+  }
+  function toggleNotes() { st.notes = !st.notes; document.body.classList.toggle('notes-on', st.notes); fit(); }
+  function fullscreen() {
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      var r = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      if (r && r.catch) r.catch(function () { /* 브라우저가 막으면 무시 */ });
+    } catch (e) { /* 무시 */ }
   }
 
   document.addEventListener('keydown', function (e) {
-    var k = e.key;
-    if (k === 'ArrowRight' || k === ' ' || k === 'PageDown' || k === 'Enter') { show(i + 1); e.preventDefault(); }
-    else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { show(i - 1); e.preventDefault(); }
-    else if (k === 'Home') { show(0); e.preventDefault(); }
-    else if (k === 'End') { show(slides.length - 1); e.preventDefault(); }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key, c = e.code;
+    if (helpEl.classList.contains('on') && (k === 'Escape' || c === 'KeyH' || k === '?')) { helpEl.classList.remove('on'); e.preventDefault(); return; }
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === ' ' || k === 'PageDown' || k === 'Enter') step(1);
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') step(-1);
+    else if (k === 'Home') go(list[0]);
+    else if (k === 'End') go(list[list.length - 1]);
+    else if (c === 'KeyS') toggleShort();
+    else if (c === 'KeyA') toggleAppendix();
+    else if (c === 'KeyN') toggleNotes();
+    else if (c === 'KeyF') fullscreen();
+    else if (c === 'KeyH' || k === '?') helpEl.classList.add('on');
+    else return;
+    e.preventDefault();
   });
 
   document.addEventListener('click', function (e) {
     if (e.button !== 0) return;
-    show(e.clientX < window.innerWidth / 4 ? i - 1 : i + 1);
+    if (helpEl.classList.contains('on')) { helpEl.classList.remove('on'); return; }
+    if (e.target.closest && e.target.closest('#notes, #todo, a')) return;
+    step(e.clientX < window.innerWidth / 4 ? -1 : 1);
   });
 
-  var start = parseInt((location.hash || '').slice(1), 10);
-  show(isNaN(start) ? 0 : start - 1);
+  window.addEventListener('resize', fit);
 
-  // 채우지 않은 자리가 남았으면 화면 위에 알린다(인쇄에는 나오지 않는다).
-  var open = '{' + '{';
-  var count = document.body.innerHTML.split(open).length - 1;
-  if (document.title.indexOf(open) >= 0) count += 1;
-  if (count > 0) {
-    var t = document.getElementById('todo');
-    t.textContent = '채우지 않은 자리 ' + count + '곳';
-    t.style.display = 'block';
+  // 시작 위치: #부록, #번호, 아니면 첫 장
+  var hash = '';
+  try { hash = decodeURIComponent((location.hash || '').slice(1)); } catch (e) { hash = ''; }
+  var start = all[0];
+  if (hash === 'short') st.short = true;
+  if (hash.indexOf('부록') === 0) {
+    st.appendix = true;
+    var ap = all.filter(isAp), an = parseInt(hash.slice(2), 10);
+    start = ap[isNaN(an) ? 0 : an - 1] || ap[0] || all[0];
+  } else {
+    var n = parseInt(hash, 10);
+    if (!isNaN(n) && all[n - 1]) { start = all[n - 1]; if (isAp(start)) st.appendix = true; }
   }
+  rebuild();
+  fit();
+  go(nearest(start));
 })();
 </script>
 </body>
