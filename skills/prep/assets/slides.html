@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{제목}}</title>
+<!--
+발표 화면 틀. prep 세션이 prep/slides.html로 복사해 채운다.
+- 채울 곳은 이중 중괄호로 감싼 자리다. 다 채운 뒤 rg -n -F 로 남은 자리를 찾는다.
+- 필요 없는 장은 section째 지운다. 장을 더하려면 같은 꼴의 section을 복사한다.
+- 넘기기: 오른쪽 화살표·스페이스·PageDown·Enter는 다음, 왼쪽 화살표·PageUp·Backspace는 이전, Home·End는 처음·끝. 화면 왼쪽 4분의 1을 누르면 이전, 나머지는 다음.
+- 인쇄(Ctrl+P)하면 장마다 한 쪽이다. 대상을 'PDF로 저장', 여백 없음, 배경 그래픽 켜기로 고른다.
+- 외부 파일·인터넷을 쓰지 않는다. 글꼴은 시스템 글꼴이다.
+-->
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1d23;
+    --muted: #5b6170;
+    --accent: #1f5fbf;
+    --line: #d9dde5;
+    --soft: #f3f6fb;
+    --warn: #b42318;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Noto Sans CJK KR", "NanumGothic", sans-serif;
+    line-height: 1.45;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  .slide {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3vh;
+    width: 100vw;
+    min-height: 100vh;
+    padding: 7vh 7vw;
+    font-size: clamp(20px, 3.4vmin, 42px);
+  }
+  body.deck .slide { display: none; height: 100vh; overflow: hidden; }
+  body.deck .slide.on { display: flex; }
+  h1, h2, p, ul { margin: 0; }
+  h1 { font-size: clamp(34px, 7vmin, 88px); line-height: 1.2; }
+  h2 { font-size: clamp(28px, 5.5vmin, 66px); color: var(--accent); border-bottom: 4px solid var(--line); padding-bottom: 1.5vh; }
+  ul { padding-left: 1.2em; }
+  li { margin: 0.45em 0; }
+  .lead { font-size: 1.15em; color: var(--muted); }
+  .stat { display: flex; align-items: baseline; gap: 2vw; flex-wrap: wrap; }
+  .big { font-size: clamp(44px, 11vmin, 150px); font-weight: 800; color: var(--accent); line-height: 1.05; }
+  .cmd { font-family: Consolas, "D2Coding", "Courier New", monospace; background: var(--soft); border-left: 6px solid var(--accent); padding: 0.5em 0.8em; font-size: 0.85em; }
+  .next { font-weight: 700; }
+  .src { font-size: clamp(14px, 2vmin, 22px); color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border-bottom: 2px solid var(--line); padding: 0.45em 0.6em; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num { font-weight: 800; color: var(--accent); }
+  .flow { display: flex; align-items: center; gap: 1.5vw; flex-wrap: wrap; }
+  .box { border: 3px solid var(--accent); border-radius: 12px; background: var(--soft); padding: 0.8em 1em; font-weight: 700; }
+  .arrow { color: var(--muted); font-size: 1.4em; }
+  #pageno { position: fixed; right: 2vw; bottom: 2vh; color: var(--muted); font-size: clamp(14px, 2vmin, 22px); }
+  #todo { position: fixed; left: 0; right: 0; top: 0; display: none; background: var(--warn); color: #ffffff; padding: 0.4em 1em; font-size: 16px; }
+
+  @page { size: 254mm 142.875mm; margin: 0; }
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.deck .slide, .slide {
+      display: flex !important;
+      width: 254mm;
+      height: 142.875mm;
+      min-height: 0;
+      overflow: hidden;
+      padding: 12mm 16mm;
+      gap: 5mm;
+      font-size: 20pt;
+      break-after: page;
+      page-break-after: always;
+    }
+    .slide:last-of-type { break-after: auto; page-break-after: auto; }
+    h1 { font-size: 36pt; }
+    h2 { font-size: 28pt; padding-bottom: 3mm; }
+    .big { font-size: 54pt; }
+    .src { font-size: 11pt; }
+    #pageno, #todo { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<section class="slide">
+  <h1>{{제목: 무엇을 하는 무엇}}</h1>
+  <p class="lead">{{한 줄 요약: 누구의 어떤 일을 어떻게 바꾸나}}</p>
+  <p class="src">{{이름}} · {{과제 이름}}</p>
+</section>
+
+<section class="slide">
+  <h2>문제와 지금 비용</h2>
+  <p>{{문제: 누가 무엇을 어떻게 하고 있어서 무엇이 새나, 한 문장}}</p>
+  <div class="stat">
+    <span class="big">{{지금 비용 숫자}}</span>
+    <span>{{그 숫자가 무엇인지: 단위, 기간, 대상}}</span>
+  </div>
+  <p class="src">근거: {{파일:줄 또는 담당자 답 Q번호}}</p>
+</section>
+
+<section class="slide">
+  <h2>만든 것</h2>
+  <ul>
+    <li>{{입력: 무엇을 넣나}}</li>
+    <li>{{처리: 무엇을 어떤 방법으로}}</li>
+    <li>{{결과: 누가 무엇을 받나}}</li>
+  </ul>
+  <p class="cmd">{{실행 한 줄 또는 화면 경로}}</p>
+</section>
+
+<!-- 선택 장: 구조도가 필요 없으면 이 section째 지운다. 상자 수는 모듈 수에 맞춘다. -->
+<section class="slide">
+  <h2>구조</h2>
+  <div class="flow">
+    <div class="box">{{입력 데이터}}</div>
+    <div class="arrow">→</div>
+    <div class="box">{{모듈 1: 파일 이름과 하는 일}}</div>
+    <div class="arrow">→</div>
+    <div class="box">{{모듈 2: 파일 이름과 하는 일}}</div>
+    <div class="arrow">→</div>
+    <div class="box">{{결과}}</div>
+  </div>
+  <p class="src">근거: {{CONTRACT.md 파일 주인 또는 코드 위치}}</p>
+</section>
+
+<section class="slide">
+  <h2>같은 데이터로 비교</h2>
+  <table>
+    <thead>
+      <tr><th>지표</th><th>지금 방식</th><th>새 방식</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>{{지표 1}}</td><td>{{지금 값 1}}</td><td class="num">{{새 값 1}}</td></tr>
+      <tr><td>{{지표 2}}</td><td>{{지금 값 2}}</td><td class="num">{{새 값 2}}</td></tr>
+    </tbody>
+  </table>
+  <p>{{같은 데이터: 기간과 건수, 결과를 보기 전에 정한 판정 기준}}</p>
+  <p class="src">근거: {{exp/비교표.md 또는 명령}} · 효과 종류: {{주어진 자료 안의 효과 / 실제 현장 효과}}</p>
+</section>
+
+<section class="slide">
+  <h2>검증 방법</h2>
+  <ul>
+    <li>{{기대값을 코드와 다른 방법으로 정한 것: 무엇으로, 몇 건}}</li>
+    <li>{{예외·경계 검사: 무엇을 넣어 어떤 결과가 나왔나}}</li>
+    <li>{{AI가 낸 결과를 확인하고 바로잡은 것}}</li>
+  </ul>
+  <p class="src">근거: {{테스트 파일 또는 명령}}</p>
+</section>
+
+<section class="slide">
+  <h2>한계와 다음 단계</h2>
+  <ul>
+    <li>{{한계 1: 확인하지 못한 것}}</li>
+    <li>{{한계 2: 가정한 것}}</li>
+  </ul>
+  <p class="next">다음: {{다음 검증: 현장에서 무엇을 재면 효과를 아나}}</p>
+</section>
+
+<div id="pageno"></div>
+<div id="todo"></div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  if (!slides.length) return;
+  document.body.classList.add('deck');
+  var pageno = document.getElementById('pageno');
+  var i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); });
+    pageno.textContent = (i + 1) + ' / ' + slides.length;
+    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) { /* 파일로 열면 막힐 수 있다 */ }
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight' || k === ' ' || k === 'PageDown' || k === 'Enter') { show(i + 1); e.preventDefault(); }
+    else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { show(i - 1); e.preventDefault(); }
+    else if (k === 'Home') { show(0); e.preventDefault(); }
+    else if (k === 'End') { show(slides.length - 1); e.preventDefault(); }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.button !== 0) return;
+    show(e.clientX < window.innerWidth / 4 ? i - 1 : i + 1);
+  });
+
+  var start = parseInt((location.hash || '').slice(1), 10);
+  show(isNaN(start) ? 0 : start - 1);
+
+  // 채우지 않은 자리가 남았으면 화면 위에 알린다(인쇄에는 나오지 않는다).
+  var open = '{' + '{';
+  var count = document.body.innerHTML.split(open).length - 1;
+  if (document.title.indexOf(open) >= 0) count += 1;
+  if (count > 0) {
+    var t = document.getElementById('todo');
+    t.textContent = '채우지 않은 자리 ' + count + '곳';
+    t.style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>
